@@ -1,0 +1,28 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <title>EmbedIT</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <script>
+        var detector = document.createElement("detect");
+        detector.style.display = "flex";
+        if (detector.style.display === "flex") {
+            document.querySelector("html").classList.add("flexbox");
+        } else {
+            document.querySelector("html").classList.add("no-flexbox");
+        }
+    </script>
+    <noscript>
+        <link rel="stylesheet" href="css/main.css">
+    </noscript>
+    <link href=".build/css/critical.css?__inline=true" rel="stylesheet" />
+</head>
+<body>
+
+    
+
+	<script src="/js/app.js" async></script>
+</body>
+</html>
