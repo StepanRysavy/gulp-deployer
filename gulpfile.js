@@ -15,23 +15,32 @@ var browserSync = require('browser-sync'),
     rename = require('gulp-rename'),
     uglify = require('gulp-uglify'),
     stylish = require('jshint-stylish'),
-    jshint = require('gulp-jshint');
+    jshint = require('gulp-jshint'),
+    ftp = require('gulp-ftp'),
+    runSequence = require('run-sequence');
 
 var reload = browserSync.reload;
+var serverRunning = false;
 
-gulp.task('default', ['process-js', 'less', 'my-critical', 'images', 'lib'], function () {
+gulp.task('default', ['process-js', 'process-css', 'images', 'lib'], function () {
+
+  gulp.watch(['css/**/*.less', '*.html'], {cwd: 'Code'}, ['process-css']);
+  gulp.watch(['js/modules/**/*.js', 'js/*.js'], {cwd: 'Code'}, ['process-js']);
+  gulp.watch(['img/**/*.*'], {cwd: 'Code'}, ['images']);
+  gulp.watch(['lib/**/*.*'], {cwd: 'Code'}, ['lib']);
+
+});
+
+gulp.task('deploy', ['inlinesource'], function () {
+
+  if (serverRunning === true) return;
+  serverRunning = true; 
 
   browserSync({
     server: {
       baseDir: './Deploy'
     }
   });
-
-  gulp.watch(['css/**/*.less'], {cwd: 'Code'}, ['less', 'my-critical']);
-  gulp.watch(['js/modules/**/*.js', 'js/*.js'], {cwd: 'Code'}, ['process-js']);
-  gulp.watch(['*.html'], {cwd: 'Code'}, ['my-critical']);
-  gulp.watch(['img/**/*.*'], {cwd: 'Code'}, ['images']);
-  gulp.watch(['lib/**/*.*'], {cwd: 'Code'}, ['lib']);
 
   gulp.watch(['**/*.*'], {cwd: 'Deploy'}, reload);
 
@@ -58,7 +67,7 @@ gulp.task('less', function () {
   	.pipe(gulp.dest('Deploy/css'));
 });
 
-gulp.task('my-critical', ['less'], function () {
+gulp.task('process-css', ['less'], function () {
 
   critical.generate({
     base: 'Deploy',
@@ -69,7 +78,7 @@ gulp.task('my-critical', ['less'], function () {
     width: 1024,
     height: 760
   }, function (err, o) {
-    gulp.start('inlinesource');
+    gulp.start('deploy');
   });
 
 });
@@ -80,9 +89,10 @@ gulp.task('copy-html', function () {
 });
 
 gulp.task('inlinesource', ['copy-html'], function () {
-    return gulp.src('Deploy/*.html')
-        .pipe(inlinesource({rootpath: 'Deploy'}))
-        .pipe(gulp.dest('Deploy'));
+  return gulp.src('Deploy/*.html')
+    .pipe(inlinesource({rootpath: 'Deploy'}))
+    .pipe(gulp.dest('Deploy'));
+      
 });
 
 gulp.task('lint', function () {
@@ -96,4 +106,13 @@ gulp.task('process-js', ['lint'], function () {
           .pipe(concat('app.js'))
           .pipe(uglify())
           .pipe(gulp.dest('Deploy/js'));
+});
+
+gulp.task('ftp', function () {
+    return gulp.src('src/*')
+        .pipe(ftp({
+            host: 'website.com',
+            user: 'johndoe',
+            pass: '1234'
+        }));
 });
