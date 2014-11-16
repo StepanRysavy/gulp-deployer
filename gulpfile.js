@@ -1,35 +1,48 @@
 var gulp = require('gulp');
 
-var browserSync = require('browser-sync');
-var sourcemaps = require('gulp-sourcemaps');
-var path = require('path');
-var less = require('gulp-less');
-var autoprefixer = require('gulp-autoprefixer');
-var minifyCSS = require('gulp-minify-css');
-var critical = require('critical');
-var file = require('gulp-file');
-var inlinesource = require('gulp-inline-source');
-var copy = require('gulp-copy');
-var debug = require('gulp-debug');
+var browserSync = require('browser-sync'),
+    sourcemaps = require('gulp-sourcemaps'),
+    path = require('path'),
+    less = require('gulp-less'),
+    autoprefixer = require('gulp-autoprefixer'),
+    minifyCSS = require('gulp-minify-css'),
+    critical = require('critical'),
+    file = require('gulp-file'),
+    inlinesource = require('gulp-inline-source'),
+    copy = require('gulp-copy'),
+    debug = require('gulp-debug'),
+    concat = require('gulp-concat'),
+    rename = require('gulp-rename'),
+    uglify = require('gulp-uglify'),
+    stylish = require('jshint-stylish'),
+    jshint = require('gulp-jshint');
 
 var reload = browserSync.reload;
 
-gulp.task('default', function() {
+gulp.task('default', ['process-js', 'less', 'my-critical', 'images', 'lib'], function () {
 
-	gulp.watch(['*.html', 'css/**/*.css', 'js/**/*.js', 'img/**/*.*'], {cwd: 'Deploy'}, reload);
-  gulp.watch(['css/**/*.less'], {cwd: 'Code'}, ['less', 'my-critical']);
-  gulp.watch(['*.html'], {cwd: 'Code'}, ['my-critical']);
-
-  gulp.start('serve', 'less', 'my-critical');
-});
-
-// watch files for changes and reload
-gulp.task('serve', function() {
   browserSync({
     server: {
       baseDir: './Deploy'
     }
   });
+
+  gulp.watch(['css/**/*.less'], {cwd: 'Code'}, ['less', 'my-critical']);
+  gulp.watch(['js/modules/**/*.js', 'js/*.js'], {cwd: 'Code'}, ['process-js']);
+  gulp.watch(['*.html'], {cwd: 'Code'}, ['my-critical']);
+  gulp.watch(['img/**/*.*'], {cwd: 'Code'}, ['images']);
+  gulp.watch(['lib/**/*.*'], {cwd: 'Code'}, ['lib']);
+
+  gulp.watch(['**/*.*'], {cwd: 'Deploy'}, reload);
+
+});
+
+gulp.task('images', function () {
+  return gulp.src('Code/img/**/*.*').pipe(gulp.dest('Deploy/img'))
+});
+
+gulp.task('lib', function () {
+  return gulp.src('Code/lib/**/*.*').pipe(gulp.dest('Deploy/lib'))
 });
 
 gulp.task('less', function () {
@@ -72,6 +85,15 @@ gulp.task('inlinesource', ['copy-html'], function () {
         .pipe(gulp.dest('Deploy'));
 });
 
-gulp.task('reload', function () {
-  reload();
+gulp.task('lint', function () {
+  return gulp.src(['Code/js/*.js', 'Code/js/modules/**/*.js' ])
+      .pipe(jshint())
+      .pipe(jshint.reporter(stylish));
+});
+
+gulp.task('process-js', ['lint'], function () {
+  return gulp.src(['Code/js/define.js', 'Code/js/lib/**/*.*', , 'Code/js/modules/**/*.*', 'Code/js/app.js'])
+          .pipe(concat('app.js'))
+          .pipe(uglify())
+          .pipe(gulp.dest('Deploy/js'));
 });
