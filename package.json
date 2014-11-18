@@ -24,6 +24,7 @@
     "gulp-duration": "0.0.0",
     "gulp-file": "^0.2.0",
     "gulp-ftp": "^1.0.1",
+    "gulp-if": "^1.2.5",
     "gulp-inline": "0.0.7",
     "gulp-inline-source": "^1.1.0",
     "gulp-jshint": "^1.9.0",
